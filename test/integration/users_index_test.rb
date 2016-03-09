@@ -37,4 +37,27 @@ class UsersIndexTest < ActionDispatch::IntegrationTest
     get users_path
     assert_select 'a', text: 'delete', count: 0
   end
+
+  test "index has only activated users" do
+    log_in_as(@non_admin)
+    get users_path
+    assert_template 'users/index'
+    first_page_of_users = User.paginate(page: 1)
+    first_page_of_users.each do |user|
+      assert_equal true, user.activated?
+    end
+  end
+
+  test "show/id should not redirect if user is activated" do
+    log_in_as(@non_admin)
+    get user_path(@non_admin)
+    assert_template 'users/show'
+  end
+
+  test "show should redirect if not activated" do
+    log_in_as(@non_admin)
+    @non_admin.toggle!(:activated)
+    get user_path(@non_admin)
+    assert_redirected_to root_url
+  end
 end
