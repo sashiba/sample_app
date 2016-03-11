@@ -5,11 +5,17 @@ class User < ActiveRecord::Base
   before_create :create_activation_digest
 
   has_secure_password
+  has_many :microposts, dependent: :destroy
+
   validates :name, presence: true, length: { maximum: 50 }
   validates :email, presence: true, length: { maximum: 250 },
                     format: { with: VALID_EMAIL_REGEX },
                     uniqueness: { case_sensitive: false }
   validates :password, presence: true, length: { minimum: 6 }, allow_nil: true
+
+  def feed
+    Micropost.where("user_id = ?", id)
+  end
 
   # Returns the hash digest of the given string.
   def self.digest(string)
