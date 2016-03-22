@@ -22,9 +22,9 @@ class User < ActiveRecord::Base
                     uniqueness: { case_sensitive: false }
   validates :password, presence: true, length: { minimum: 6 }, allow_nil: true
 
-  def feed
-    Micropost.where("user_id = ?", id)
-  end
+ # def feed
+ #   Micropost.where("user_id = ?", id)
+ # end
 
   def follow(other_user)
     active_relationships.create(followed_id: other_user.id)
@@ -87,6 +87,13 @@ class User < ActiveRecord::Base
 
   def password_reset_expired?
     reset_sent_at < 2.hours.ago
+  end
+
+  def feed
+    following_ids = "SELECT followed_id FROM relationships
+                     WHERE follower_id = :user_id"
+    Micropost.where("user_id IN (#{following_ids}) OR user_id = :user_id",
+                     user_id: id)
   end
 
   private
